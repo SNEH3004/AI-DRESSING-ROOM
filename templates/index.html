@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Virtual Dressing Room</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #0a0b0f 0%, #1a1f2e 100%);
+            color: #e8ecf4;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #00e5c8; text-align: center; margin: 20px 0; font-size: 2.5em; text-shadow: 0 0 20px rgba(0,229,200,0.3); }
+        
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        
+        .video-section {
+            background: rgba(20,20,30,0.8);
+            border: 2px solid #00e5c8;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 0 30px rgba(0,229,200,0.2);
+        }
+        .video-section h2 { color: #00e5c8; margin-bottom: 10px; font-size: 1.2em; }
+        .video-section img { width: 100%; border-radius: 8px; display: block; }
+        
+        .controls-section {
+            background: rgba(20,20,30,0.8);
+            border: 2px solid #f5c842;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(245,200,66,0.1);
+        }
+        .controls-section h2 { color: #f5c842; margin-bottom: 15px; }
+        
+        .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-box {
+            background: rgba(24,28,36,0.9);
+            border: 1px solid #242836;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-label { font-size: 12px; color: #8490b0; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #00e5c8; }
+        
+        .instructions {
+            background: rgba(30,40,50,0.8);
+            border-left: 4px solid #00e5c8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .instructions strong { color: #00e5c8; }
+        
+        button, input[type="button"] {
+            background: #00e5c8;
+            color: #0a0b0f;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        button:hover { background: #00d4b4; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,229,200,0.3); }
+        button:active { transform: translateY(0); }
+        
+        .shirt-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; }
+        .shirt-btn {
+            background: #242836;
+            color: #e8ecf4;
+            border: 2px solid #242836;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .shirt-btn:hover { border-color: #00e5c8; color: #00e5c8; }
+        .shirt-btn.active { background: #00e5c8; color: #0a0b0f; border-color: #00e5c8; }
+        
+        .upload-section {
+            background: rgba(20,30,40,0.8);
+            border: 2px dashed #00e5c8;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .upload-section h3 { color: #00e5c8; margin-bottom: 10px; }
+        
+        input[type="file"] {
+            display: none;
+        }
+        .file-input-label {
+            display: inline-block;
+            background: #00e5c8;
+            color: #0a0b0f;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        .file-input-label:hover { background: #00d4b4; }
+        
+        .checkbox-group {
+            margin: 10px 0;
+            text-align: left;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #e8ecf4;
+        }
+        input[type="checkbox"] { cursor: pointer; }
+        
+        .gesture-hint {
+            background: rgba(0,229,200,0.1);
+            border: 1px solid #00e5c8;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #00e5c8;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .gesture-hint:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 60px rgba(0,229,200,0.12);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-panel {
+            background: rgba(24,28,36,0.9);
+            border: 1px solid #242836;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: left;
+            min-height: 96px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .stat-panel strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: #8490b0;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+        .stat-panel span {
+            font-size: 22px;
+            font-weight: 700;
+            color: #e8ecf4;
+        }
+        .active-status {
+            color: #00e5c8;
+        }
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .action-area button {
+            background: linear-gradient(135deg, #00e5c8, #81ffda);
+            color: #0a0b0f;
+            border: none;
+            box-shadow: 0 12px 30px rgba(0,229,200,0.18);
+        }
+        .pulse-button {
+            animation: pulse 1.8s infinite ease-in-out;
+        }
+        .mini-hint {
+            font-size: 13px;
+            color: #b8c0d7;
+            line-height: 1.5;
+        }
+        .mini-hint strong {
+            color: #f5c842;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+        
+        .success { color: #00e5c8; }
+        .error { color: #ff6b6b; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 4px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ AI Virtual Dressing Room</h1>
+        
+        <div class="main-content">
+            <!-- Video Feed -->
+            <div class="video-section">
+                <h2>📹 Live Try-On</h2>
+                <img src="/video_feed" alt="Live video feed with virtual try-on">
+            </div>
+            
+            <!-- Controls -->
+            <div class="controls-section">
+                <h2>⚙️ Controls & Status</h2>
+                
+                <!-- Status Boxes -->
+                <div class="status-grid">
+                    <div class="stat-panel">
+                        <strong>Selected Shirt</strong>
+                        <span id="selectedShirt">1 / 4</span>
+                    </div>
+                    <div class="stat-panel">
+                        <strong>Applied Shirt</strong>
+                        <span id="appliedShirt">None</span>
+                    </div>
+                    <div class="stat-panel">
+                        <strong>Gesture</strong>
+                        <span id="gesture">None</span>
+                    </div>
+                    <div class="stat-panel">
+                        <strong>Confidence</strong>
+                        <span id="confidence">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Gesture Hint -->
+                <div class="gesture-hint" id="gestureHintText">
+                    👉 Swipe left/right to choose a shirt. Press <strong>Apply Selected Shirt</strong> to overlay it on the live feed.
+                </div>
+                
+                <!-- Shirt Selection -->
+                <h3 style="margin-top: 20px; color: #00e5c8;">Select Shirt</h3>
+                <div class="shirt-buttons" id="shirtButtons"></div>
+                <div class="action-area">
+                    <button onclick="applyShirt()" class="pulse-button">Apply Selected Shirt</button>
+                    <div class="mini-hint">
+                        Tip: swipe your hand smoothly from left to right or tap a shirt button to change the selection.
+                    </div>
+                </div>
+                
+                <!-- Hand Folding Capture -->
+                <div class="instructions">
+                    <strong>✋ Capture Mode:</strong><br/>
+                    Fold your hand to capture the current frame. Click the button or fold your hand.
+                </div>
+                <button onclick="captureFrame()" style="width: 100%; margin-top: 10px;">📸 Capture Frame</button>
+            </div>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h3>📤 Upload Your Own Clothes</h3>
+            <div class="instructions">
+                <strong>How to use:</strong><br/>
+                1. Upload an image of a shirt/cloth<br/>
+                2. Check "Remove Background" to automatically remove white/light background<br/>
+                3. The image will be added to your shirt collection as a PNG
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="removeBg" checked>
+                    Remove background from image (converts to transparent PNG)
+                </label>
+            </div>
+            
+            <input type="file" id="fileInput" accept="image/*">
+            <label for="fileInput" class="file-input-label">Choose Image</label>
+            
+            <button onclick="uploadImage()" style="width: 100%; margin-top: 10px;">Upload & Add to Collection</button>
+            
+            <div id="uploadMessage"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API = 'http://127.0.0.1:5000';
+        let totalShirts = 4;
+        
+        // Create shirt selection buttons
+        function initShirtButtons() {
+            const container = document.getElementById('shirtButtons');
+            container.innerHTML = '';
+            for (let i = 0; i < totalShirts; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = `Shirt ${i + 1}`;
+                btn.className = 'shirt-btn' + (i === 0 ? ' active' : '');
+                btn.onclick = () => selectShirt(i);
+                container.appendChild(btn);
+            }
+        }
+        
+        // Select shirt by index
+        async function selectShirt(idx) {
+            try {
+                await fetch(`${API}/shirt/${idx}`, { method: 'POST' });
+                pollStatus();
+            } catch (e) {
+                console.error('Select shirt error:', e);
+            }
+        }
+
+        async function applyShirt() {
+            const button = document.querySelector('.action-area button');
+            button.textContent = 'Applying...';
+            button.disabled = true;
+            try {
+                const res = await fetch(`${API}/apply`, { method: 'POST' });
+                if (!res.ok) throw new Error('apply failed');
+                pollStatus();
+            } catch (e) {
+                console.error('Apply shirt error:', e);
+                alert('Failed to apply selected shirt');
+            } finally {
+                button.textContent = 'Apply Selected Shirt';
+                button.disabled = false;
+            }
+        }
+        
+        // Capture frame
+        async function captureFrame() {
+            try {
+                const res = await fetch(`${API}/capture`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✓ Frame captured successfully!');
+                } else {
+                    alert('✗ Failed to capture frame');
+                }
+            } catch (e) {
+                console.error('Capture error:', e);
+                alert('Error capturing frame');
+            }
+        }
+        
+        // Upload image
+        async function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const removeBg = document.getElementById('removeBg').checked;
+            const messageDiv = document.getElementById('uploadMessage');
+            
+            if (!fileInput.files.length) {
+                messageDiv.innerHTML = '<div class="message error">Please select an image first</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('removeBg', removeBg);
+            
+            try {
+                const res = await fetch(`${API}/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (data.success) {
+                    messageDiv.innerHTML = `<div class="message success">✓ ${data.message}</div>`;
+                    fileInput.value = '';
+                    
+                    // If added as shirt, update total and recreate buttons
+                    if (data.shirt_index !== undefined) {
+                        totalShirts++;
+                        initShirtButtons();
+                    }
+                } else {
+                    messageDiv.innerHTML = `<div class="message error">✗ ${data.error || data.message}</div>`;
+                }
+            } catch (e) {
+                messageDiv.innerHTML = `<div class="message error">✗ Error: ${e.message}</div>`;
+            }
+        }
+        
+        async function pollStatus() {
+            try {
+                const res = await fetch(`${API}/status`);
+                const data = await res.json();
+                
+                document.getElementById('selectedShirt').textContent = `${data.current_shirt + 1} / ${data.total_shirts}`;
+                document.getElementById('appliedShirt').textContent = data.applied_shirt !== null
+                    ? `${data.applied_shirt + 1} / ${data.total_shirts}`
+                    : 'None';
+                document.getElementById('fps').textContent = Math.round(data.fps);
+                document.getElementById('gesture').textContent = data.gesture === 'none' ? 'None' : 
+                    data.gesture === 'swipe_left' ? '← Swipe Left' : 
+                    data.gesture === 'swipe_right' ? 'Swipe Right →' : data.gesture;
+                document.getElementById('confidence').textContent = Math.round(data.confidence) + '%';
+
+                const hint = document.getElementById('gestureHintText');
+                if (data.in_cooldown) {
+                    hint.innerHTML = '⏳ Cooldown active — hold still for a moment, then swipe again.';
+                } else if (data.gesture === 'swipe_left') {
+                    hint.innerHTML = '✨ Nice swipe! Selected the previous shirt. Press Apply or keep swiping to explore more.';
+                } else if (data.gesture === 'swipe_right') {
+                    hint.innerHTML = '✨ Nice swipe! Selected the next shirt. Press Apply or keep swiping to explore more.';
+                } else if (data.applied_shirt === null) {
+                    hint.innerHTML = '👉 Tap Apply after choosing a shirt to see it in the live mirror.';
+                } else {
+                    hint.innerHTML = '👕 Live try-on is ready. Swipe again to preview another shirt instantly.';
+                }
+
+                // Update shirt buttons to show selected shirt
+                const buttons = document.querySelectorAll('.shirt-btn');
+                buttons.forEach((btn, i) => {
+                    btn.className = 'shirt-btn' + (i === data.current_shirt ? ' active' : '');
+                });
+                
+                // Update total shirts if changed
+                if (data.total_shirts > totalShirts) {
+                    totalShirts = data.total_shirts;
+                    initShirtButtons();
+                }
+            } catch (e) {
+                console.error('Poll error:', e);
+            }
+        }
+
+        // Poll status every 300ms
+        setInterval(pollStatus, 300);
+        
+        // Initialize
+        initShirtButtons();
+        pollStatus();
+    </script>
+</body>
+</html>
